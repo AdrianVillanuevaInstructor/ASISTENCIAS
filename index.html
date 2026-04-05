@@ -107,7 +107,7 @@ async function cargarLista(){
     const data = await res.json();
 
     document.getElementById("curso").innerText = data.curso ? "Curso: " + data.curso : "";
-    document.getElementById("clase").innerText = data.clase ? "Clase: " + data.clase : "";
+    document.getElementById("clase").innerText = data.clase ? "Numero deClase: " + data.clase : "";
     document.getElementById("horario").innerText = data.horario ? "Horario: " + data.horario : "";
 
     const lista = document.getElementById("lista");
