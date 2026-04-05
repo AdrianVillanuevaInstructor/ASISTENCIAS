@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
+<link rel="manifest" href="/manifest.json">
+
+<meta name="theme-color" content="#111827">
+
+<link rel="apple-touch-icon" href="/icon-192.png">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Asistencia Institucional</title>
@@ -241,5 +251,45 @@ cargarLista();
 setInterval(cargarLista,3000);
 
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js");
+  });
+}
+</script>
+
+<script>
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  const btn = document.createElement("button");
+  btn.innerText = "Instalar App";
+  btn.style.position = "fixed";
+  btn.style.bottom = "20px";
+  btn.style.right = "20px";
+  btn.style.padding = "10px 15px";
+  btn.style.borderRadius = "12px";
+  btn.style.border = "none";
+  btn.style.background = "#10b981";
+  btn.style.color = "white";
+  btn.style.cursor = "pointer";
+  btn.style.boxShadow = "0 5px 15px rgba(0,0,0,0.3)";
+  document.body.appendChild(btn);
+
+  btn.onclick = () => {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      btn.remove();
+      deferredPrompt = null;
+    });
+  };
+});
+</script>
+
 </body>
 </html>
