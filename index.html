@@ -3,11 +3,8 @@
 <head>
 
 <link rel="manifest" href="/manifest.json">
-
 <meta name="theme-color" content="#111827">
-
 <link rel="apple-touch-icon" href="/icon-192.png">
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -23,6 +20,7 @@
     --card-bg:#ffffff;
     --text:#203a43;
     --card-item:#f4f6f9;
+    --hover-color:#5CC6D0;
 }
 
 @media (prefers-color-scheme: dark){
@@ -93,15 +91,15 @@ body{
     text-align:center;
     font-weight:600;
     cursor:pointer;
-    transition:background 0.3s ease, transform 0.25s ease, color 0.3s ease;
-    transition:all 0.25s ease;
     box-shadow:0 5px 15px rgba(0,0,0,0.1);
+    transition:background 0.3s ease, transform 0.25s ease, color 0.3s ease;
 }
 
-.card:hover{
-    transform:translateY(-3px);
-    background:#5CC6D0;
+/* 🎨 HOVER CORREGIDO */
+.card:not(.success):hover{
+    background:var(--hover-color);
     color:#ffffff;
+    transform:translateY(-3px);
 }
 
 .card.success{
@@ -141,7 +139,6 @@ body{
 <div class="container">
 
     <div class="logo">
-        <!-- REEMPLAZA POR TU LOGO -->
         <img src="LOGO.png" alt="Logo">
     </div>
 
@@ -157,141 +154,7 @@ body{
 </div>
 
 <script>
-
 const API_URL = "https://script.google.com/macros/s/AKfycbwuLJl7z8S4kG3_ZYNkmRKpEDB2OtzUYf1pnXWahT6JY8Pq5igyHcmEj6vzxhx9xlQmdA/exec";
-
-/* 🔊 SONIDO CHECK */
-function playSound(){
-    const audio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_7c0c9bb0d3.mp3?filename=success-1-6297.mp3");
-    audio.play();
-}
-
-/* ⏱ RELOJ EN VIVO */
-function actualizarReloj(){
-    const ahora = new Date();
-    const hora = ahora.toLocaleTimeString();
-    document.getElementById("reloj").innerText = "Hora actual: " + hora;
-}
-setInterval(actualizarReloj,1000);
-actualizarReloj();
-
-/* ✨ RIPPLE EFFECT */
-function crearRipple(event,element){
-    const circle = document.createElement("span");
-    const diameter = Math.max(element.clientWidth, element.clientHeight);
-    circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${event.offsetX - diameter/2}px`;
-    circle.style.top = `${event.offsetY - diameter/2}px`;
-    circle.classList.add("ripple");
-
-    const ripple = element.getElementsByClassName("ripple")[0];
-    if(ripple){ ripple.remove(); }
-
-    element.appendChild(circle);
-}
-
-async function cargarLista(){
-
-    const res = await fetch(API_URL);
-    const data = await res.json();
-
-    document.getElementById("curso").innerText = data.curso ? "Curso: " + data.curso : "";
-    document.getElementById("clase").innerText = data.clase ? "Clase: " + data.clase : "";
-    document.getElementById("horario").innerText = data.horario ? "Horario: " + data.horario : "";
-
-    const lista = document.getElementById("lista");
-    lista.innerHTML = "";
-
-    if(!data.alumnos || data.alumnos.length === 0){
-        lista.innerHTML = `<p class="empty">No hay alumnos habilitados en este momento</p>`;
-        return;
-    }
-
-    data.alumnos.forEach(al => {
-
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerText = al.alumno;
-
-        div.onclick = async (e) => {
-
-            crearRipple(e,div);
-            div.style.pointerEvents = "none";
-
-            const res = await fetch(API_URL,{
-                method:"POST",
-                body: JSON.stringify({cuenta: al.cuenta})
-            });
-
-            const data = await res.json();
-
-            if(data.error){
-                div.style.pointerEvents = "auto";
-                return;
-            }
-
-            playSound();
-
-            div.classList.add("success");
-            div.innerText = "✔ Asistencia registrada";
-
-            setTimeout(()=>{
-                div.style.transition = "all 0.4s ease";
-                div.style.opacity = "0";
-                div.style.transform = "scale(0.8)";
-            },700);
-
-            setTimeout(()=>{
-                div.remove();
-            },1100);
-        };
-
-        lista.appendChild(div);
-    });
-}
-
-cargarLista();
-setInterval(cargarLista,3000);
-
-</script>
-
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js");
-  });
-}
-</script>
-
-<script>
-let deferredPrompt;
-
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-
-  const btn = document.createElement("button");
-  btn.innerText = "Instalar App";
-  btn.style.position = "fixed";
-  btn.style.bottom = "20px";
-  btn.style.right = "20px";
-  btn.style.padding = "10px 15px";
-  btn.style.borderRadius = "12px";
-  btn.style.border = "none";
-  btn.style.background = "#10b981";
-  btn.style.color = "white";
-  btn.style.cursor = "pointer";
-  btn.style.boxShadow = "0 5px 15px rgba(0,0,0,0.3)";
-  document.body.appendChild(btn);
-
-  btn.onclick = () => {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => {
-      btn.remove();
-      deferredPrompt = null;
-    });
-  };
-});
 </script>
 
 </body>
