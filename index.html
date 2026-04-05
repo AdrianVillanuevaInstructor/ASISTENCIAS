@@ -6,11 +6,27 @@
 <title>Asistencia Institucional</title>
 
 <style>
+:root{
+    --bg1:#0f2027;
+    --bg2:#203a43;
+    --bg3:#2c5364;
+    --card-bg:#ffffff;
+    --text:#203a43;
+    --card-item:#f4f6f9;
+}
+
+@media (prefers-color-scheme: dark){
+    :root{
+        --card-bg:#1e1e1e;
+        --text:#ffffff;
+        --card-item:#2a2a2a;
+    }
+}
 
 body{
     margin:0;
     font-family:'Segoe UI',sans-serif;
-    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
     display:flex;
     justify-content:center;
     align-items:center;
@@ -18,11 +34,27 @@ body{
 }
 
 .container{
-    background:white;
-    width:500px;
+    background:var(--card-bg);
+    width:520px;
     padding:30px;
     border-radius:20px;
     box-shadow:0 20px 50px rgba(0,0,0,0.45);
+    color:var(--text);
+}
+
+.logo{
+    text-align:center;
+    margin-bottom:10px;
+}
+
+.logo img{
+    height:60px;
+}
+
+.reloj{
+    text-align:center;
+    font-weight:600;
+    margin-bottom:15px;
 }
 
 .header{
@@ -32,20 +64,20 @@ body{
 
 .header h3{
     margin:6px 0;
-    color:#000000;
-    font-weight:600;
 }
 
 .lista{
     display:grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns:1fr 1fr;
     gap:12px;
-    max-height:350px;
+    max-height:320px;
     overflow:auto;
 }
 
 .card{
-    background:#f4f6f9;
+    position:relative;
+    overflow:hidden;
+    background:var(--card-item);
     padding:18px;
     border-radius:14px;
     text-align:center;
@@ -57,17 +89,26 @@ body{
 
 .card:hover{
     transform:translateY(-3px);
-    background:#5CC6D0;
-    color:white;
-}
-
-.card:active{
-    transform:scale(0.97);
 }
 
 .card.success{
     background:#28a745 !important;
     color:white;
+}
+
+.ripple{
+    position:absolute;
+    border-radius:50%;
+    transform:scale(0);
+    animation:ripple 600ms linear;
+    background:rgba(255,255,255,0.6);
+}
+
+@keyframes ripple{
+    to{
+        transform:scale(4);
+        opacity:0;
+    }
 }
 
 .empty{
@@ -77,17 +118,22 @@ body{
     color:gray;
 }
 
-@media(max-width:520px){
-    .container{
-        width:90%;
-    }
+@media(max-width:600px){
+    .container{width:92%;}
 }
-
 </style>
 </head>
 <body>
 
 <div class="container">
+
+    <div class="logo">
+        <!-- REEMPLAZA POR TU LOGO -->
+        <img src="LOGO.png" alt="Logo">
+    </div>
+
+    <div class="reloj" id="reloj"></div>
+
     <div class="header">
         <h3 id="curso"></h3>
         <h3 id="clase"></h3>
@@ -101,13 +147,43 @@ body{
 
 const API_URL = "https://script.google.com/macros/s/AKfycbwuLJl7z8S4kG3_ZYNkmRKpEDB2OtzUYf1pnXWahT6JY8Pq5igyHcmEj6vzxhx9xlQmdA/exec";
 
+/* 🔊 SONIDO CHECK */
+function playSound(){
+    const audio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_7c0c9bb0d3.mp3?filename=success-1-6297.mp3");
+    audio.play();
+}
+
+/* ⏱ RELOJ EN VIVO */
+function actualizarReloj(){
+    const ahora = new Date();
+    const hora = ahora.toLocaleTimeString();
+    document.getElementById("reloj").innerText = "Hora actual: " + hora;
+}
+setInterval(actualizarReloj,1000);
+actualizarReloj();
+
+/* ✨ RIPPLE EFFECT */
+function crearRipple(event,element){
+    const circle = document.createElement("span");
+    const diameter = Math.max(element.clientWidth, element.clientHeight);
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.offsetX - diameter/2}px`;
+    circle.style.top = `${event.offsetY - diameter/2}px`;
+    circle.classList.add("ripple");
+
+    const ripple = element.getElementsByClassName("ripple")[0];
+    if(ripple){ ripple.remove(); }
+
+    element.appendChild(circle);
+}
+
 async function cargarLista(){
 
     const res = await fetch(API_URL);
     const data = await res.json();
 
     document.getElementById("curso").innerText = data.curso ? "Curso: " + data.curso : "";
-    document.getElementById("clase").innerText = data.clase ? "Numero de Clase: " + data.clase : "";
+    document.getElementById("clase").innerText = data.clase ? "Clase: " + data.clase : "";
     document.getElementById("horario").innerText = data.horario ? "Horario: " + data.horario : "";
 
     const lista = document.getElementById("lista");
@@ -119,23 +195,42 @@ async function cargarLista(){
     }
 
     data.alumnos.forEach(al => {
+
         const div = document.createElement("div");
         div.className = "card";
         div.innerText = al.alumno;
 
-        div.onclick = async () => {
+        div.onclick = async (e) => {
 
-            div.classList.add("success");
-            div.innerText = "✔ Asistencia registrada";
+            crearRipple(e,div);
+            div.style.pointerEvents = "none";
 
-            await fetch(API_URL,{
+            const res = await fetch(API_URL,{
                 method:"POST",
                 body: JSON.stringify({cuenta: al.cuenta})
             });
 
+            const data = await res.json();
+
+            if(data.error){
+                div.style.pointerEvents = "auto";
+                return;
+            }
+
+            playSound();
+
+            div.classList.add("success");
+            div.innerText = "✔ Asistencia registrada";
+
             setTimeout(()=>{
-                cargarLista();
-            },800);
+                div.style.transition = "all 0.4s ease";
+                div.style.opacity = "0";
+                div.style.transform = "scale(0.8)";
+            },700);
+
+            setTimeout(()=>{
+                div.remove();
+            },1100);
         };
 
         lista.appendChild(div);
@@ -143,9 +238,8 @@ async function cargarLista(){
 }
 
 cargarLista();
-setInterval(cargarLista,1000);
+setInterval(cargarLista,3000);
 
 </script>
-
 </body>
 </html>
